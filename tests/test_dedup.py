@@ -1,0 +1,29 @@
+from datetime import datetime
+
+from src.dedup import find_new
+from src.models import Assignment, Task
+
+
+def _assignment(moodle_id: int) -> Assignment:
+    return Assignment(
+        moodle_id=moodle_id,
+        title=f"Assignment {moodle_id}",
+        course_name="Course",
+        due_date=datetime(2026, 6, 1, 12, 0),
+    )
+
+
+def _task(google_id: str, notes: str, completed: bool = False) -> Task:
+    return Task(
+        google_id=google_id,
+        title="any",
+        notes=notes,
+        due_date=None,
+        completed=completed,
+    )
+
+
+def test_empty_existing_tasks_returns_all_assignments():
+    assignments = [_assignment(1), _assignment(2)]
+    result = find_new(assignments, existing_tasks=[])
+    assert result == assignments
