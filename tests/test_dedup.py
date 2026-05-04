@@ -34,3 +34,10 @@ def test_all_present_returns_empty():
     existing = [_task("g1", "moodle_id:1"), _task("g2", "moodle_id:2")]
     result = find_new(assignments, existing)
     assert result == []
+
+
+def test_mix_returns_only_new():
+    assignments = [_assignment(1), _assignment(2), _assignment(3)]
+    existing = [_task("g1", "moodle_id:1"), _task("g3", "moodle_id:3")]
+    result = find_new(assignments, existing)
+    assert [a.moodle_id for a in result] == [2]
