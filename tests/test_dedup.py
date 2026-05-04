@@ -41,3 +41,15 @@ def test_mix_returns_only_new():
     existing = [_task("g1", "moodle_id:1"), _task("g3", "moodle_id:3")]
     result = find_new(assignments, existing)
     assert [a.moodle_id for a in result] == [2]
+
+
+def test_malformed_notes_are_ignored():
+    assignments = [_assignment(1), _assignment(2)]
+    existing = [
+        _task("g_a", ""),
+        _task("g_b", "user-typed reminder"),
+        _task("g_c", "moodle_id:notanumber"),
+        _task("g_d", "moodle_id:1"),
+    ]
+    result = find_new(assignments, existing)
+    assert [a.moodle_id for a in result] == [2]
