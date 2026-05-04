@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 
-from src.dedup import find_new
+from src.dedup import find_completed, find_new
 from src.models import Assignment, Task
 
 
@@ -13,14 +13,17 @@ def _assignment(moodle_id: int) -> Assignment:
     )
 
 
-def _task(google_id: str, notes: str, completed: bool = False) -> Task:
+def _task(google_id: str, notes: str, completed: bool = False, due_date: date | None = None) -> Task:
     return Task(
         google_id=google_id,
         title="any",
         notes=notes,
-        due_date=None,
+        due_date=due_date,
         completed=completed,
     )
+
+
+TODAY = date(2026, 5, 4)
 
 
 def test_empty_existing_tasks_returns_all_assignments():
@@ -63,3 +66,9 @@ def test_dedup_is_by_id_not_title():
     existing = [_task("g99", "moodle_id:99")]
     result = find_new([a1, a2], existing)
     assert result == [a1, a2]
+
+
+def test_find_completed_empty_active_tasks_returns_empty():
+    assignments = [_assignment(1)]
+    result = find_completed(assignments, active_tasks=[], today=TODAY)
+    assert result == []
