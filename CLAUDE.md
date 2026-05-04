@@ -6,11 +6,10 @@ dates. Built so it can be forked by other TAU students who run their own
 isolated instance with their own credentials. Exists because manually checking
 each course every week is tedious and assignments get missed.
 
-**Status:** v1 complete (local manual run, idempotent sync, auto-complete on
-Moodle submission). v1.5 (GitHub Actions schedule) and friend-onboarding polish
-are next. The PRD and DECISIONS docs read as committed, but the actual
-architecture made several adjustments during implementation — treat the docs as
-historical context and the code as the source of truth.
+**Status:** v1.5 complete. The sync runs unattended every day at 05:00 UTC via
+GitHub Actions. Friend onboarding (a future Phase 2) and umbrella restructure
+(a future Phase 3) are deferred until needed. v2 may add notifications
+(Telegram or GitHub Issues) when new tasks are detected.
 
 ## Tech Stack & Environment
 
@@ -75,6 +74,7 @@ env vars.
 - [src/dedup.py](src/dedup.py) — pure functions `find_new` and
   `find_completed`. The only tested module.
 - [tests/test_dedup.py](tests/test_dedup.py) — 10 unit tests.
+- [.github/workflows/sync.yml](.github/workflows/sync.yml) — daily cron at 05:00 UTC; runs `python -m src.main` with secrets injected as env vars
 
 ## Conventions & Anti-patterns
 
