@@ -1,7 +1,8 @@
 """Entry point: orchestrates fetch -> dedup -> create+complete."""
 
 import sys
-from datetime import date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from src import config, dedup, moodle_client, tasks_client
 
@@ -20,7 +21,8 @@ def main() -> None:
     print(f"[dedup] {len(new_assignments)} new assignment(s) to push (out of {len(assignments)} fetched)")
 
     active_existing = [t for t in existing if not t.completed]
-    to_complete = dedup.find_completed(assignments, active_existing, today=date.today())
+    israel_today = datetime.now(tz=ZoneInfo("Asia/Jerusalem")).date()
+    to_complete = dedup.find_completed(assignments, active_existing, today=israel_today)
     print(f"[dedup] {len(to_complete)} task(s) to mark completed")
 
     for a in new_assignments:
