@@ -1,7 +1,7 @@
 # Moodle → Google Tasks Sync — v1 Design
 
 **Date:** 2026-05-03
-**Status:** Approved, ready for implementation planning
+**Status:** In implementation — Phase 3 decisions confirmed 2026-05-04
 **Predecessors:** [PRD.md](../../../PRD.md), [DECISIONS.md](../../../DECISIONS.md), [CLAUDE.md](../../../CLAUDE.md)
 
 ---
@@ -18,8 +18,10 @@ re-runs.
 - A locally-runnable Python script (`python -m src.main`)
 - Authenticates to TAU Moodle via the `tau-tools` library, caching the session
 - Fetches all upcoming assignments in a configurable window (default: next 30 days)
-- Creates Google Tasks with the Moodle due date and a title format chosen at the Phase 3 decision point (default proposal: `[Course Name] Assignment Name`)
-- Idempotent: re-running on the same day creates nothing new
+- Creates Google Tasks in a dedicated list named `Uni Assignments` (created automatically if missing)
+- Title format: `{course_name}: {assignment_name}` — e.g. `אלגוריתמים: שאלות הבנה – שבוע 3`
+- Marks existing Google Tasks as complete when the corresponding assignment disappears from the Moodle Timeline (= submitted by the user), provided the due date has not yet passed
+- Idempotent: re-running on the same day creates nothing new and marks nothing complete twice
 - Logs clearly to stdout
 - Configured entirely through environment variables, loaded locally from `.env`
 
@@ -27,7 +29,7 @@ re-runs.
 
 - Scheduled in GitHub Actions (deferred to v1.5)
 - Documented for friend onboarding / fork model (deferred to v1.5)
-- Filtering on submission status (`tau-tools` doesn't expose it)
+- Filtering on submission status directly (`tau-tools` doesn't expose it — auto-complete infers it from Timeline disappearance)
 - LLM-enhanced in any way at runtime
 - Designed with abstractions for hypothetical future Moodle features (YAGNI)
 - Resolving the 5 PRD open questions beyond dedup — those wait until they bite
