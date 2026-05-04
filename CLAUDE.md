@@ -6,9 +6,11 @@ dates. Built so it can be forked by other TAU students who run their own
 isolated instance with their own credentials. Exists because manually checking
 each course every week is tedious and assignments get missed.
 
-**Status:** pre-implementation. No code exists yet. The PRD and DECISIONS docs
-read as committed, but architecture is still exploratory — treat proposed
-structure as a starting point, not a contract.
+**Status:** v1 complete (local manual run, idempotent sync, auto-complete on
+Moodle submission). v1.5 (GitHub Actions schedule) and friend-onboarding polish
+are next. The PRD and DECISIONS docs read as committed, but the actual
+architecture made several adjustments during implementation — treat the docs as
+historical context and the code as the source of truth.
 
 ## Tech Stack & Environment
 
@@ -43,22 +45,36 @@ touching the orchestrator. See
 
 ## Build & Test Commands
 
-No `requirements.txt` or source files exist yet. Once they do, the intended
-shape is:
-
-```bash
-# Local setup
+```powershell
+# Local setup (one-time)
 python -m venv .venv
-.venv\Scripts\activate          # Windows
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-# Local run (loads .env via python-dotenv)
+# Run the sync (loads .env via python-dotenv)
 python -m src.main
 
-# CI run is identical — workflow injects secrets as env vars
+# Run unit tests
+pytest
 ```
 
-Tests, lint, and formatter commands are TBD — to be established when code lands.
+CI runs (v1.5) will use the same `python -m src.main` entry point — the
+GitHub Actions workflow is just a thin YAML wrapper that injects secrets as
+env vars.
+
+## Architecture quick reference
+
+- [src/main.py](src/main.py) — orchestrator: fetch → dedup → create + complete
+- [src/config.py](src/config.py) — env-var loader, returns typed `Config`
+- [src/models.py](src/models.py) — `Assignment` and `Task` dataclasses (only
+  types crossing module boundaries)
+- [src/moodle_client.py](src/moodle_client.py) — wraps `tau-tools`, returns
+  `list[Assignment]`. Course-name prefix stripping happens here.
+- [src/tasks_client.py](src/tasks_client.py) — wraps Google Tasks API.
+  Find-or-create the `Uni Assignments` list; list/create/mark-complete tasks.
+- [src/dedup.py](src/dedup.py) — pure functions `find_new` and
+  `find_completed`. The only tested module.
+- [tests/test_dedup.py](tests/test_dedup.py) — 10 unit tests.
 
 ## Conventions & Anti-patterns
 
