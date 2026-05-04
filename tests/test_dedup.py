@@ -72,3 +72,11 @@ def test_find_completed_empty_active_tasks_returns_empty():
     assignments = [_assignment(1)]
     result = find_completed(assignments, active_tasks=[], today=TODAY)
     assert result == []
+
+
+def test_find_completed_skips_tasks_still_in_moodle_fetch():
+    assignments = [_assignment(1)]
+    # task has moodle_id:1 — still in the fetch, must NOT be completed
+    active = [_task("g1", "moodle_id:1")]
+    result = find_completed(assignments, active, today=TODAY)
+    assert result == []
