@@ -33,6 +33,13 @@ functions — `find_new` and `find_completed` — that take in dataclasses and
 return dataclasses. They are the only tested module
 ([tests/test_dedup.py](tests/test_dedup.py), 10 cases).
 
+**Cron deployment via GitHub Actions:** [.github/workflows/sync.yml](../../.github/workflows/sync.yml)
+runs the entire script daily at 05:00 UTC on a hosted Ubuntu runner. The
+workflow has no application logic — it's a thin wrapper that decodes
+secrets to disk and invokes `python -m src.main`. This means local and CI
+behavior are byte-identical: any bug reproduces locally, any local fix
+works in CI without modification.
+
 ## Design Decisions (with implementation references)
 
 The substantive "why" lives in [DECISIONS.md](../../DECISIONS.md). Below are
