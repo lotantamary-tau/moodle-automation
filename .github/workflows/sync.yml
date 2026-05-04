@@ -1,0 +1,42 @@
+name: Daily Moodle sync
+
+on:
+  schedule:
+    # Daily at 05:00 UTC (= 07:00 IST winter / 08:00 IDT summer)
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.lock.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.lock.txt
+
+      - name: Decode Google credentials
+        env:
+          GOOGLE_CREDENTIALS_B64: ${{ secrets.GOOGLE_CREDENTIALS_B64 }}
+          GOOGLE_TOKEN_B64: ${{ secrets.GOOGLE_TOKEN_B64 }}
+        run: |
+          echo "$GOOGLE_CREDENTIALS_B64" | base64 --decode > credentials.json
+          echo "$GOOGLE_TOKEN_B64" | base64 --decode > token.json
+
+      - name: Run sync
+        env:
+          TAU_USERNAME: ${{ secrets.TAU_USERNAME }}
+          TAU_ID: ${{ secrets.TAU_ID }}
+          TAU_PASSWORD: ${{ secrets.TAU_PASSWORD }}
+          GOOGLE_CREDENTIALS_PATH: credentials.json
+          GOOGLE_TOKEN_PATH: token.json
+        run: python -m src.main
