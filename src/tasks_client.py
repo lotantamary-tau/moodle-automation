@@ -97,3 +97,13 @@ def mark_complete(config: Config, google_id: str) -> None:
     task["status"] = "completed"
     service.tasks().update(tasklist=list_id, task=google_id, body=task).execute()
     print(f"[tasks] marked complete: {task.get('title', google_id)!r}")
+
+
+def create(config: Config, title: str, notes: str, due_str: str) -> str:
+    """Create one task in the Uni Assignments list. Returns the new google_id."""
+    service = _build_service(config)
+    list_id = _get_or_create_list(service, config.tasks_list_name)
+    body = {"title": title, "notes": notes, "due": due_str}
+    result = service.tasks().insert(tasklist=list_id, body=body).execute()
+    print(f"[tasks] created: {title!r}")
+    return result["id"]
