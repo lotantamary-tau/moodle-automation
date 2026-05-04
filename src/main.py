@@ -1,11 +1,15 @@
 """Entry point: orchestrates fetch -> dedup -> create+complete."""
 
+import sys
 from datetime import date
 
 from src import config, dedup, moodle_client, tasks_client
 
 
 def main() -> None:
+    # Force UTF-8 stdout so Hebrew task titles don't crash Windows cp1252 terminals
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     cfg = config.load()
     print("[main] starting sync")
 
