@@ -1,88 +1,106 @@
 # Architectural Patterns
 
-> This file was initialized with the project before code exists. The patterns
-> below are *proposed* — drawn from [PRD.md](../../PRD.md) and
-> [DECISIONS.md](../../DECISIONS.md). As code lands, replace prose with concrete
-> `file:line` references and update or remove proposals that don't survive
-> contact with reality.
+> Originally drafted before code existed; updated after v1 ships to reference
+> real `file:line` locations.
 
 ## Architectural Patterns
 
-**Layered pipeline (proposed):** `moodle_client` (source) → `dedup` (filter) →
-`tasks_client` (sink), orchestrated by `main.py`. Each layer has a single
-responsibility and a narrow interface (lists of plain data objects), so any one
-layer can be swapped or extended without touching the others.
+**Layered pipeline:** [src/main.py:8](src/main.py) orchestrates a one-way data
+flow:
 
-**Wrapper-per-external-service (proposed):** every external dependency
-(`tau-tools`, Google Tasks API) is hidden behind one module. The orchestrator
-never imports the library directly. This:
-- Isolates breakage when an external service changes (very likely for `tau-tools`)
-- Lets future Moodle integrations (calendar, grades, forum activity) slot in
-  alongside `moodle_client.py` without modifying the orchestrator — the user has
-  flagged this extensibility as a first-class requirement
-- Makes it possible to fake either side for tests without mocking deep internals
+```
+config.load → moodle_client.fetch → list_existing → find_new + find_completed → create + mark_complete
+```
 
-## Design Decisions
+Each layer has a single responsibility and a narrow interface (lists of plain
+dataclasses, never library-specific objects).
 
-The substantive "why" lives in [DECISIONS.md](../../DECISIONS.md) — six
-decisions with full reasoning. Summary index for quick navigation:
+**Wrapper-per-external-service:** every external dependency is hidden behind
+one module:
 
-1. `tau-tools` over official Moodle Web Services API — official API blocked by
-   TAU's three-field auth ([DECISIONS.md:7-26](../../DECISIONS.md#L7-L26))
-2. GitHub Actions over Routines / Make / Lambda — deterministic, free,
-   debuggable ([DECISIONS.md:29-50](../../DECISIONS.md#L29-L50))
-3. No LLM in v1 runtime — Pro plan excludes API; v1 logic is deterministic
-   ([DECISIONS.md:54-65](../../DECISIONS.md#L54-L65))
-4. Public repo + fork-based sharing — clean credential isolation via per-repo
-   GitHub Secrets ([DECISIONS.md:67-86](../../DECISIONS.md#L67-L86))
+- [src/moodle_client.py:11](src/moodle_client.py) wraps `tau-tools.Moodle` and
+  returns `list[Assignment]`
+- [src/tasks_client.py:14](src/tasks_client.py) wraps Google Tasks API:
+  OAuth flow, list management, read, write, complete
+
+The orchestrator never imports `tau_tools` or `googleapiclient` directly. This
+isolates breakage when an external service changes (very likely for
+`tau-tools`) and lets future Moodle integrations slot in alongside
+`moodle_client.py` without touching the orchestrator.
+
+**Pure-function dedup:** [src/dedup.py](src/dedup.py) contains only pure
+functions — `find_new` and `find_completed` — that take in dataclasses and
+return dataclasses. They are the only tested module
+([tests/test_dedup.py](tests/test_dedup.py), 10 cases).
+
+## Design Decisions (with implementation references)
+
+The substantive "why" lives in [DECISIONS.md](../../DECISIONS.md). Below are
+the implementation locations:
+
+1. `tau-tools` over the official Moodle Web Services API —
+   [src/moodle_client.py:11](src/moodle_client.py)
+2. GitHub Actions over Routines / Make / Lambda — not implemented yet, planned
+   for v1.5
+3. No LLM in v1 runtime — confirmed by the absence of any `anthropic` import
+   in `src/`
+4. Google Workspace Internal mode (TAU SSO) — chosen over External mode after
+   discovering the 7-day refresh-token expiry would break unattended runs.
+   Configuration in [src/tasks_client.py:11](src/tasks_client.py) (SCOPES) and
+   in the Google Cloud Console project owned by the user's TAU account.
 5. Two-place credentials (`.env` local, GitHub Secrets prod) with identical
-   variable names — 12-factor pattern ([DECISIONS.md:89-95](../../DECISIONS.md#L89-L95))
-6. Google Tasks over Calendar for v1 — closer fit to "list of items with due
-   dates" ([DECISIONS.md:99-104](../../DECISIONS.md#L99-L104))
+   variable names — implemented via [src/config.py:23](src/config.py)
+   `os.environ` reads, identical for local and CI.
+6. Google Tasks over Calendar for v1 — [src/tasks_client.py](src/tasks_client.py)
+   uses the Google Tasks API exclusively.
 
 ## State Management
 
 State lives in three places, by design no shared mutable state in memory:
 
-- **Per-run inputs:** environment variables (`os.environ`) — read once at startup
-- **Cross-run cache:** `session.json` (TAU session cookie) and `token.json`
-  (Google OAuth refresh token) on disk. Both must be in `.gitignore`. In CI,
-  `token.json` is rehydrated from a GitHub Secret each run.
+- **Per-run inputs:** environment variables loaded once at
+  [src/config.py:24](src/config.py) `load()`. Other modules accept the typed
+  `Config` as a parameter; nobody else touches `os.environ`.
+- **Cross-run cache:**
+  - `session.json` — tau-tools session cookie, set by
+    [src/moodle_client.py:12](src/moodle_client.py)
+  - `token.json` — Google OAuth refresh token, written by
+    [src/tasks_client.py:21](src/tasks_client.py) `_get_credentials`. Both are
+    in `.gitignore`.
 - **Source of truth for "what's already synced":** Google Tasks itself. The
-  Moodle assignment ID lives in the task's notes (or title — TBD) and is the
-  dedup key. No separate state file is planned for v1; this is fragile if users
-  delete tasks manually and is one of the open design questions.
+  Moodle assignment ID lives in the task's `notes` field as `moodle_id:<n>`,
+  parsed by the regex in [src/dedup.py:8](src/dedup.py).
 
 ## Recurring Logic Patterns
 
-- **Idempotency contract:** every operation that writes to Google Tasks must
-  check first whether the assignment is already represented. Re-running on the
-  same day is a success criterion ([PRD.md:204-208](../../PRD.md#L204-L208)),
-  so this is a hard requirement, not a nice-to-have.
-- **Fail loud, fail clear:** GitHub Actions logs are the only debugging surface.
-  Errors should bubble up with stack traces; transient errors may retry but
-  must log every attempt. Never swallow exceptions silently.
-- **Never log secrets:** even when debugging auth, log only that auth was
-  attempted, not what was sent.
+- **Idempotency:** `find_new` only returns assignments not represented; main.py
+  never creates a duplicate. Verified on every run via the second-run
+  `created=0` invariant.
+- **Auto-complete heuristic:** `find_completed` in
+  [src/dedup.py](src/dedup.py) treats a task as completable when its
+  `moodle_id` is gone from the current Moodle fetch AND its due date has not
+  yet passed. Past-due gone-from-fetch tasks are left alone (ambiguous).
+- **Fail loud, fail clear:** no exception swallowing. Stack traces bubble to
+  the user / CI logs. Hebrew titles work because
+  [src/main.py:11](src/main.py) forces stdout to UTF-8.
+- **Never log secrets:** confirmed by inspection — no `print` of credentials
+  anywhere.
 
 ## API / Interface Design Patterns
 
-CLI / entry point: `python -m src.main` with no required arguments — all
-configuration via env vars. Optional flags (e.g., `--dry-run`) TBD.
+CLI entry: `python -m src.main` with no required arguments — all configuration
+via env vars. See [src/main.py:36](src/main.py) `if __name__ == "__main__"`.
 
-Internal module interfaces should pass plain data (dataclasses, dicts) between
-layers, never library-specific objects. Example: `moodle_client.fetch()` returns
-a list of normalized `Assignment` records, not raw `tau-tools` `AssignmentInfo`
-objects. This keeps the dedup and Google-Tasks layers free of `tau-tools`
-imports.
+Internal module interfaces pass `list[Assignment]` and `list[Task]` between
+layers, never library-specific objects. Defined in
+[src/models.py](src/models.py).
 
 ## Dependency Injection / Inversion of Control
 
-Lightweight, no framework: dependencies are constructed in `main.py` and passed
-into functions explicitly. No globals, no singletons. This makes it trivial to
-substitute fakes in tests and to add a `--dry-run` mode that swaps the real
-`tasks_client` for a logging stub.
+Lightweight, no framework. Dependencies are constructed in
+[src/main.py:14](src/main.py) and passed to functions explicitly. No globals,
+no singletons.
 
-Configuration is injected the same way: `config.py` reads env vars once and
-exposes a typed config object that other modules accept as a parameter. No
-module should call `os.environ` directly except `config.py`.
+`config.py` is the only module that reads `os.environ`; every other module
+accepts `Config` as a parameter. This makes adding a `--dry-run` flag trivial
+in v1.5: swap the `tasks_client` for a logging stub.
