@@ -1,7 +1,7 @@
 # Moodle → Google Tasks Sync — v1.5 Design
 
 **Date:** 2026-05-04
-**Status:** Approved, ready for implementation planning
+**Status:** Implemented and verified. Daily 05:00 UTC scheduled runs confirmed working.
 **Predecessors:** [v1 design spec](2026-05-03-moodle-tasks-sync-v1-design.md), [PRD.md](../../../PRD.md), [DECISIONS.md](../../../DECISIONS.md), [CLAUDE.md](../../../CLAUDE.md)
 
 ---
