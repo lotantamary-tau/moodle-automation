@@ -53,3 +53,13 @@ def test_malformed_notes_are_ignored():
     ]
     result = find_new(assignments, existing)
     assert [a.moodle_id for a in result] == [2]
+
+
+def test_dedup_is_by_id_not_title():
+    """Two assignments with identical titles but different IDs must both survive
+    if neither ID is in the existing tasks."""
+    a1 = Assignment(moodle_id=10, title="Lab", course_name="Physics", due_date=datetime(2026, 6, 1, 12, 0))
+    a2 = Assignment(moodle_id=11, title="Lab", course_name="Physics", due_date=datetime(2026, 6, 8, 12, 0))
+    existing = [_task("g99", "moodle_id:99")]
+    result = find_new([a1, a2], existing)
+    assert result == [a1, a2]
