@@ -99,3 +99,13 @@ def test_find_completed_returns_task_gone_from_fetch_with_future_due_date():
     active = [completed_task]
     result = find_completed(assignments, active, today=TODAY)
     assert result == [completed_task]
+
+
+def test_find_completed_skips_past_due_tasks_gone_from_fetch():
+    """A past-due task gone from the fetch is ambiguous (missed vs submitted late?) —
+    leave it alone, the user can decide."""
+    assignments = [_assignment(99)]  # id 1 NOT in current fetch
+    past = date(2026, 4, 1)  # before TODAY (2026-05-04)
+    active = [_task("gone_past", "moodle_id:1", due_date=past)]
+    result = find_completed(assignments, active, today=TODAY)
+    assert result == []
