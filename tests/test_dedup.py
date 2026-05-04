@@ -80,3 +80,22 @@ def test_find_completed_skips_tasks_still_in_moodle_fetch():
     active = [_task("g1", "moodle_id:1")]
     result = find_completed(assignments, active, today=TODAY)
     assert result == []
+
+
+def test_find_completed_skips_tasks_with_no_due_date():
+    """A task gone from the fetch but with no due_date is ambiguous — leave it alone."""
+    assignments = [_assignment(99)]
+    active = [_task("gone_no_date", "moodle_id:1", due_date=None)]
+    result = find_completed(assignments, active, today=TODAY)
+    assert result == []
+
+
+def test_find_completed_returns_task_gone_from_fetch_with_future_due_date():
+    """A task whose moodle_id is gone from the current fetch and whose due date is
+    still in the future was probably submitted — mark it complete."""
+    assignments = [_assignment(99)]  # id 1 NOT in current fetch
+    future = date(2026, 6, 1)
+    completed_task = _task("gone_future", "moodle_id:1", due_date=future)
+    active = [completed_task]
+    result = find_completed(assignments, active, today=TODAY)
+    assert result == [completed_task]

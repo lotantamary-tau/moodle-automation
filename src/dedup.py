@@ -14,7 +14,21 @@ def find_new(assignments: list[Assignment], existing_tasks: list[Task]) -> list[
 
 
 def find_completed(assignments: list[Assignment], active_tasks: list[Task], today: date) -> list[Task]:
-    return []
+    current_ids = {a.moodle_id for a in assignments}
+    result: list[Task] = []
+    for task in active_tasks:
+        match = _MOODLE_ID_PATTERN.search(task.notes)
+        if not match:
+            continue
+        moodle_id = int(match.group(1))
+        if moodle_id in current_ids:
+            continue  # still pending in Moodle
+        if task.due_date is None:
+            continue  # ambiguous
+        if task.due_date < today:
+            continue  # past due, might be missed not submitted
+        result.append(task)
+    return result
 
 
 def _seen_moodle_ids(tasks: list[Task]) -> set[int]:
