@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from src import config, dedup, moodle_client, tasks_client
+from src import config, dedup, moodle_client, notifier, tasks_client
 
 
 def main() -> None:
@@ -25,15 +25,21 @@ def main() -> None:
     to_complete = dedup.find_completed(assignments, active_existing, today=israel_today)
     print(f"[dedup] {len(to_complete)} task(s) to mark completed")
 
+    created_titles: list[str] = []
     for a in new_assignments:
         title = cfg.title_format.format(course_name=a.course_name, title=a.title)
         notes = f"moodle_id:{a.moodle_id}"
         # Use local-timezone date directly to avoid date-shift bugs from UTC conversion
         due_str = a.due_date.strftime("%Y-%m-%dT00:00:00.000Z")
         tasks_client.create(cfg, title, notes, due_str)
+        created_titles.append(title)
 
+    completed_titles: list[str] = []
     for t in to_complete:
         tasks_client.mark_complete(cfg, t.google_id)
+        completed_titles.append(t.title)
+
+    notifier.notify_all(cfg, created_titles, completed_titles)
 
     print(f"[main] done. created={len(new_assignments)} completed={len(to_complete)}")
 
