@@ -6,10 +6,12 @@ dates. Built so it can be forked by other TAU students who run their own
 isolated instance with their own credentials. Exists because manually checking
 each course every week is tedious and assignments get missed.
 
-**Status:** v2 complete. The sync runs unattended every day at 04:37 UTC via
-GitHub Actions and notifies the user via any configured channels (GitHub
-Issues, ntfy.sh, Telegram, Discord). Friend onboarding (a future Phase 2)
-and umbrella restructure (a future Phase 3) are deferred until needed.
+**Status:** Phase 2 complete. The sync runs unattended every day at 04:37 UTC
+via GitHub Actions; notifies the user via any configured channels (GitHub
+Issues, ntfy.sh, Telegram, Discord); and is forkable by friends via a one-
+command bootstrap script (`scripts/setup.py`) and a comprehensive README
+walkthrough. Umbrella restructure (a future Phase 3) is deferred until a
+second automation actually exists.
 
 ## Tech Stack & Environment
 
@@ -78,6 +80,9 @@ env vars.
   channels (GitHub Issues, ntfy.sh, Telegram, Discord); each opt-in via secret
 - [tests/test_notifier.py](tests/test_notifier.py) — 2 unit tests for the
   message formatter
+- [scripts/setup.py](scripts/setup.py) — friend bootstrap script, run once
+  after fork; runs OAuth flow, prompts for TAU credentials, prints all 5
+  GitHub Secrets ready to paste
 - [.github/workflows/sync.yml](.github/workflows/sync.yml) — daily cron at 05:00 UTC; runs `python -m src.main` with secrets injected as env vars
 
 ## Conventions & Anti-patterns
