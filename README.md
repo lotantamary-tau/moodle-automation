@@ -339,7 +339,7 @@ delete the secrets (the workflow will fail silently and email you on failure).
 
 If a Setup step's verify command failed, find the symptom below.
 
-### Step 3: `pytest -v` fails or `pip install` errors out
+### `pytest -v` fails or `pip install` errors out (Step 3)
 
 - **SSL error during pip install** — likely a corporate network proxy. Try a
   different network (mobile hotspot).
@@ -348,7 +348,7 @@ If a Setup step's verify command failed, find the symptom below.
 - **`pytest` command not found** — re-activate the venv. On Windows:
   `.venv\Scripts\Activate.ps1`. On macOS/Linux: `source .venv/bin/activate`.
 
-### Step 4: "Internal" is greyed out in Google Cloud OAuth consent
+### "Internal" is greyed out in Google Cloud OAuth consent (Step 4)
 
 Your account isn't part of Google Workspace. The project owner's setup relies
 on TAU's Workspace tenant — if your TAU account doesn't sign in via TAU's
@@ -357,46 +357,46 @@ runs won't work (External mode tokens expire every 7 days).
 
 Action: confirm with TAU IT, or message the project owner.
 
-### Step 5: Setup script can't open browser for OAuth
+### Setup script can't open browser for OAuth (Step 5)
 
 You're probably running on a headless server or over SSH. Run the script on a
 machine with a real browser (your laptop), then copy the resulting
 `token.json` to wherever you're deploying.
 
-### Step 5: Setup script says "credentials.json not found"
+### Setup script says "credentials.json not found" (Step 5)
 
 The downloaded JSON didn't end up in the project root. Check:
 - The file is named exactly `credentials.json` (not `client_secret_xxx.json`
   — rename it if needed)
 - It's in the same folder as `README.md`, not in a subfolder
 
-### Step 5 (macOS): `python scripts/setup.py` fails with import error
+### `python scripts/setup.py` fails with import error (Step 5, macOS)
 
 Mac defaults `python` to Python 2.7 in some setups. Use `python3` explicitly:
 ```bash
 python3 scripts/setup.py
 ```
 
-### Step 7: Workflow fails on first run with "TAU auth failed" / login error
+### Workflow fails on first run with "TAU auth failed" / login error (Step 7)
 
 Your TAU password may have a typo. Re-run the setup script (`python
 scripts/setup.py`) and retype the password carefully. Re-update the
 `TAU_PASSWORD` secret with the new value (paste the password value again from
 the new run).
 
-### Step 7: Workflow fails with "Tasks API has not been used"
+### Workflow fails with "Tasks API has not been used" (Step 7)
 
 You forgot Step 4d (enabling the Tasks API). Go back to Google Cloud Console
 → search "Tasks API" → click "Enable".
 
-### Step 7: ntfy notification never arrives
+### ntfy notification never arrives (Step 7)
 
 - Confirm the topic name in your `NTFY_TOPIC` secret matches the topic you
   subscribed to in the ntfy phone app exactly (no typos, same case)
 - Re-trigger the workflow with `gh workflow run "Daily Moodle sync"` (or via
   the Actions tab)
 
-### Step 7: GitHub Issues notification never arrives
+### GitHub Issues notification never arrives (Step 7)
 
 - Check the in-app notifications bell first
   (https://github.com/notifications) — it usually arrives there even if email
