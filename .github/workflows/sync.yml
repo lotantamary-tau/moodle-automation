@@ -2,8 +2,8 @@ name: Daily Moodle sync
 
 on:
   schedule:
-    # Daily at 05:00 UTC (= 07:00 IST winter / 08:00 IDT summer)
-    - cron: "0 5 * * *"
+    # TEMP: 08:15 UTC for one-shot post-fix verification (will revert to "37 4" after)
+    - cron: "15 8 * * *"
   workflow_dispatch:
 
 jobs:
