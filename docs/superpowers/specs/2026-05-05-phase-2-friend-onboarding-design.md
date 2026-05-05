@@ -1,7 +1,7 @@
 # Phase 2 — Friend Onboarding Design
 
 **Date:** 2026-05-05
-**Status:** Approved, ready for implementation planning
+**Status:** Implemented and verified.
 **Predecessors:** [v2 notifications spec](2026-05-05-moodle-tasks-sync-v2-notifications-design.md), [PRD.md](../../../PRD.md), [DECISIONS.md](../../../DECISIONS.md), [CLAUDE.md](../../../CLAUDE.md)
 
 ---
