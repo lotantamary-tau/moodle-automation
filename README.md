@@ -317,20 +317,103 @@ for it to finish (about 30-60 seconds).
 
 If anything failed, see Troubleshooting Section 8.
 
-## Tests
+## Daily life (after setup)
 
-```powershell
-pytest
+Once setup is done, the workflow runs automatically every day at **04:37 UTC**
+(= 06:37 IST winter / 07:37 IDT summer). New assignments appear in your "Uni
+Assignments" Google Tasks list; tasks for assignments you've submitted get
+auto-checked.
+
+To check whether the workflow ran today: visit your fork's Actions tab.
+
+To manually trigger a run (e.g., to test): "Daily Moodle sync" → "Run workflow".
+
+To disable a notification channel later: see Section 6 → "Disabling a channel
+later".
+
+To pause the project entirely (e.g., during exam break): in your fork, go to
+**Settings → Actions → General** → set "Workflow permissions" to none, or just
+delete the secrets (the workflow will fail silently and email you on failure).
+
+## Troubleshooting
+
+If a Setup step's verify command failed, find the symptom below.
+
+### Step 3: `pytest -v` fails or `pip install` errors out
+
+- **SSL error during pip install** — likely a corporate network proxy. Try a
+  different network (mobile hotspot).
+- **Permission error / package conflicts** — make sure you activated the
+  virtualenv before running pip (your prompt should start with `(.venv)`).
+- **`pytest` command not found** — re-activate the venv. On Windows:
+  `.venv\Scripts\Activate.ps1`. On macOS/Linux: `source .venv/bin/activate`.
+
+### Step 4: "Internal" is greyed out in Google Cloud OAuth consent
+
+Your account isn't part of Google Workspace. The project owner's setup relies
+on TAU's Workspace tenant — if your TAU account doesn't sign in via TAU's
+Google login page, you can't use Internal mode, and the workflow's unattended
+runs won't work (External mode tokens expire every 7 days).
+
+Action: confirm with TAU IT, or message the project owner.
+
+### Step 5: Setup script can't open browser for OAuth
+
+You're probably running on a headless server or over SSH. Run the script on a
+machine with a real browser (your laptop), then copy the resulting
+`token.json` to wherever you're deploying.
+
+### Step 5: Setup script says "credentials.json not found"
+
+The downloaded JSON didn't end up in the project root. Check:
+- The file is named exactly `credentials.json` (not `client_secret_xxx.json`
+  — rename it if needed)
+- It's in the same folder as `README.md`, not in a subfolder
+
+### Step 5 (macOS): `python scripts/setup.py` fails with import error
+
+Mac defaults `python` to Python 2.7 in some setups. Use `python3` explicitly:
+```bash
+python3 scripts/setup.py
 ```
 
-## What's not done yet
+### Step 7: Workflow fails on first run with "TAU auth failed" / login error
 
-v1 ships as a local manual run. The following are explicitly deferred:
+Your TAU password may have a typo. Re-run the setup script (`python
+scripts/setup.py`) and retype the password carefully. Re-update the
+`TAU_PASSWORD` secret with the new value (paste the password value again from
+the new run).
 
-- Scheduled execution via GitHub Actions (v1.5)
-- Friend onboarding via the fork model (v1.5)
-- Updating tasks when Moodle due dates change (current logic is create-only;
-  date changes are not propagated)
+### Step 7: Workflow fails with "Tasks API has not been used"
+
+You forgot Step 4d (enabling the Tasks API). Go back to Google Cloud Console
+→ search "Tasks API" → click "Enable".
+
+### Step 7: ntfy notification never arrives
+
+- Confirm the topic name in your `NTFY_TOPIC` secret matches the topic you
+  subscribed to in the ntfy phone app exactly (no typos, same case)
+- Re-trigger the workflow with `gh workflow run "Daily Moodle sync"` (or via
+  the Actions tab)
+
+### Step 7: GitHub Issues notification never arrives
+
+- Check the in-app notifications bell first
+  (https://github.com/notifications) — it usually arrives there even if email
+  is delayed
+- Check your spam folder for emails from `notifications@github.com`
+- Confirm `NOTIFY_GITHUB_ISSUES` is set as a **variable** (not a secret) with
+  value `true` — these are different in GitHub's UI
+
+## What this project is not
+
+- Not a calendar sync (uses Google Tasks, not Calendar)
+- Not a real-time integration (daily, not push-based)
+- Not officially affiliated with Tel Aviv University
+- Not maintained on a schedule — best-effort by the project owner. If you
+  fork it and it breaks, you may need to fix it yourself or wait
+- Not a multi-user service — each fork is a standalone deployment with its
+  own credentials
 
 ## License / status
 
