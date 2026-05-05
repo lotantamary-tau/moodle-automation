@@ -40,6 +40,17 @@ secrets to disk and invokes `python -m src.main`. This means local and CI
 behavior are byte-identical: any bug reproduces locally, any local fix
 works in CI without modification.
 
+**Opt-in notifications:** [src/notifier.py](../../src/notifier.py) sends a
+single plain-text summary to any of 4 channels (GitHub Issues, ntfy.sh,
+Telegram, Discord) when a daily run produces non-empty results. Each channel
+is independent; absent secret = silent skip. One channel's failure is logged
+and isolated so it doesn't cascade to the others (`_try()` wrapper). The
+formatter is a pure function and the only tested unit
+([tests/test_notifier.py](../../tests/test_notifier.py)). For GitHub Issues,
+each issue is auto-assigned to the repo owner (read from
+`GITHUB_REPOSITORY_OWNER` env var) so GitHub fires the assignee notification —
+otherwise github-actions[bot] activity would be suppressed for watchers.
+
 ## Design Decisions (with implementation references)
 
 The substantive "why" lives in [DECISIONS.md](../../DECISIONS.md). Below are
