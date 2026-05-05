@@ -18,3 +18,20 @@ def test_format_message_mixed_new_and_completed():
         "נוירוביולוגיה: תרגיל 3"
     )
     assert result == expected
+
+
+def test_format_message_only_new_omits_completed_section():
+    """When completed_titles is empty, the 'completed' section is not in the output."""
+    result = _format_message(
+        created_titles=["Software Project: HW 1"],
+        completed_titles=[],
+    )
+    expected = (
+        "Moodle Tasks Sync:\n"
+        "\n"
+        "new assignments(1):\n"
+        "Software Project: HW 1"
+    )
+    assert result == expected
+    # Sanity: 'completed' must not appear at all
+    assert "completed" not in result
