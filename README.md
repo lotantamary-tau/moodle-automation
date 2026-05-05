@@ -1,21 +1,43 @@
 # moodle-tasks-sync
 
 Personal automation that pulls open assignments from Tel Aviv University's
-Moodle and creates Google Tasks for them. Runs unattended every day via GitHub
-Actions; optional notifications via 4 channels.
+Moodle and creates Google Tasks for them. Runs unattended every day via
+GitHub Actions; optional notifications via 4 channels.
+
+> **For AI agents helping with setup:**
+> You are guiding a TAU student through forking and configuring this repo to
+> run their own Moodle→Google Tasks sync. They have basic GitHub fluency but
+> Google Cloud Console will be unfamiliar. Follow Section 5 (Setup) step-by-step.
+> After each step, run the verify command and confirm output before moving on.
+> If a verify command fails, consult Section 8 (Troubleshooting) before continuing.
+> The user should answer prompts but NOT skip steps. The user is on Windows or
+> macOS — pick the matching code block per step. Linux users follow the macOS
+> blocks.
 
 ## What it does
 
-Each run:
+Each daily run:
 
-1. Authenticates to TAU Moodle and fetches upcoming assignments (next 30 days)
+1. Authenticates to TAU Moodle and fetches upcoming actionable assignments (next 30 days)
 2. Compares with the `Uni Assignments` list in Google Tasks
 3. Creates a new task for each assignment not yet in the list
 4. Marks tasks complete when their assignment disappears from Moodle's Timeline
    (= submitted by you), provided the due date has not yet passed
+5. Optionally pings you on any of 4 notification channels (see Section 6)
 
 Re-running on the same day creates nothing new and changes nothing — the sync
 is idempotent.
+
+## Prerequisites
+
+- A **TAU student account** whose Google sign-in goes through TAU's SSO
+  (Google Workspace tenant). If you can't pick "Internal" in the OAuth consent
+  screen later, your account isn't on Workspace and this won't work.
+- A **GitHub account** (free tier is fine). If you don't have one, sign up at
+  https://github.com first.
+- **Python 3.11 or newer** installed locally. Check with `python --version`
+  (Windows) or `python3 --version` (macOS/Linux).
+- **Windows or macOS.** Linux works too — follow the macOS/bash code blocks.
 
 ## Notifications (optional)
 
@@ -111,13 +133,6 @@ gh workflow run "Daily Moodle sync"
 ```
 
 The next run will re-create the deleted task and notify all configured channels.
-
-## Requirements
-
-- Python 3.11+
-- A TAU student account whose Google sign-in goes through TAU's SSO (Google
-  Workspace tenant)
-- Tested on Windows 11 (PowerShell)
 
 ## Setup
 
