@@ -51,6 +51,16 @@ each issue is auto-assigned to the repo owner (read from
 `GITHUB_REPOSITORY_OWNER` env var) so GitHub fires the assignee notification —
 otherwise github-actions[bot] activity would be suppressed for watchers.
 
+**One-command friend bootstrap:** [scripts/setup.py](../../scripts/setup.py)
+collapses the local-environment portion of fork-based setup into a single
+command. It runs the Google OAuth flow (with token.json reuse if valid),
+prompts for TAU credentials with masked password input, base64-encodes the
+two JSON files, and prints all 5 GitHub Secrets in a paste-ready block.
+Deliberately does NOT call `gh secret set` — friends paste into the GitHub
+web UI to keep the script's prerequisites minimal (no gh CLI required, no
+gh auth setup). Per-fork repo URL detection via `git remote get-url origin`
+means friends never have to type their username.
+
 ## Design Decisions (with implementation references)
 
 The substantive "why" lives in [DECISIONS.md](../../DECISIONS.md). Below are
