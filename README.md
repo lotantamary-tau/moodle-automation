@@ -136,38 +136,186 @@ The next run will re-create the deleted task and notify all configured channels.
 
 ## Setup
 
-1. Clone this repo
-2. Create a virtualenv and install dependencies:
+Each step has a verify command at the end. Don't skip ahead until verify passes.
 
-   ```powershell
-   python -m venv .venv
-   .venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   ```
+### Step 1: Fork this repo on GitHub
 
-3. Set up your Google OAuth credentials (one-time). The short version:
-   - Sign in to https://console.cloud.google.com with your TAU account
-   - Create a new project, enable the Tasks API
-   - Configure the OAuth consent screen as **Internal** user type
-   - Create OAuth client credentials (Desktop app) and download the JSON
-   - Save it as `credentials.json` in the project root
-   - Step-by-step instructions are in
-     [docs/superpowers/specs/2026-05-03-moodle-tasks-sync-v1-design.md](docs/superpowers/specs/2026-05-03-moodle-tasks-sync-v1-design.md)
-4. Copy `.env.example` to `.env` and fill in your TAU credentials:
+Click the "Fork" button at the top-right of this repo's GitHub page. GitHub
+will create your own copy at `https://github.com/<your-username>/moodle-automation`.
 
-   ```powershell
-   Copy-Item .env.example .env
-   ```
+**Verify:** open `https://github.com/<your-username>/moodle-automation` in your
+browser — it should show the fork.
 
-5. Run the sync:
+### Step 2: Clone your fork locally
 
-   ```powershell
-   python -m src.main
-   ```
+**Windows (PowerShell):**
+```powershell
+cd $HOME
+git clone https://github.com/<your-username>/moodle-automation.git
+cd moodle-automation
+```
 
-   The first run opens a browser for Google sign-in. Subsequent runs use the
-   cached `token.json` (which doesn't expire because the OAuth app is in
-   Internal mode).
+**macOS / Linux (bash):**
+```bash
+cd ~
+git clone https://github.com/<your-username>/moodle-automation.git
+cd moodle-automation
+```
+
+**Verify:** running `ls` (or `Get-ChildItem` on PowerShell) shows `src/`,
+`tests/`, `scripts/`, and `README.md`.
+
+### Step 3: Create a virtualenv and install dependencies
+
+**Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+**macOS / Linux (bash):**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Verify:** run `pytest -v` — you should see `12 passed` in the output. (If
+this fails, see Troubleshooting Section 8.)
+
+### Step 4: Set up your Google Cloud project
+
+This is the longest step. Each TAU friend needs their own isolated Google
+Cloud project. Follow the clicks exactly. *(As of 2026-05-05; if Google's UI
+has changed, screenshot the discrepancy and message the project owner.)*
+
+4a. Sign in to https://console.cloud.google.com/ with your **TAU account**
+(not a personal Gmail).
+
+4b. Click the project dropdown at the top → "New Project".
+
+4c. Name it (suggested: `moodle-tasks-sync`) → click "Create". Wait for the
+project to be created (a few seconds).
+
+4d. Once created, type **"Tasks API"** in the top search bar → click the
+**Tasks API** result → click the blue **"Enable"** button. Wait for it to
+finish enabling.
+
+4e. In the left sidebar, click **"APIs & Services"** → **"OAuth consent screen"**.
+
+4f. **Important:** when asked for User Type, choose **"Internal"**.
+> If "Internal" is **greyed out**, your account isn't part of Google
+> Workspace — this project won't work for you. See Troubleshooting Section 8.
+
+4g. Fill in:
+- App name: `moodle-tasks-sync` (or whatever)
+- User support email: your TAU email (auto-filled)
+- Developer contact email: your TAU email
+
+Click "Save and Continue".
+
+4h. On the "Scopes" screen, click "Save and Continue" without adding any scopes.
+
+4i. On the "Test users" screen, click "Save and Continue" without adding any.
+
+4j. In the left sidebar, click **"Credentials"** → **"Create Credentials"** at
+the top → **"OAuth client ID"**.
+
+4k. Application type: **"Desktop app"**. Name it `moodle-tasks-sync-desktop`
+(or whatever). Click "Create".
+
+4l. A dialog shows your client ID. Click **"Download JSON"**. Save the file as
+`credentials.json` in your `moodle-automation` project root (the folder you
+cloned in Step 2).
+
+**Verify:** in your terminal, from the project root:
+
+**Windows:**
+```powershell
+Get-ChildItem credentials.json
+```
+
+**macOS / Linux:**
+```bash
+ls credentials.json
+```
+
+You should see the file listed (a few KB in size).
+
+### Step 5: Run the setup script
+
+This is the one local command that does the rest of the heavy lifting.
+
+**Windows (PowerShell):**
+```powershell
+python scripts/setup.py
+```
+
+**macOS / Linux (bash):**
+```bash
+python3 scripts/setup.py
+```
+
+What happens:
+- Your browser opens for Google OAuth — sign in with your TAU account → click
+  "Continue" / "Allow"
+- Browser shows a "The authentication flow has completed" message — close it
+- Back in your terminal, you'll be prompted for your TAU username, ID, and
+  password (password is masked as you type)
+- The script then prints a long block with 5 secret name/value pairs
+
+**Verify:** the script ends with a banner saying "Done. Now add these 5
+secrets to GitHub" followed by 5 numbered secret pairs. Don't close this
+terminal yet — you'll copy-paste from it in the next step.
+
+### Step 6: Add the 5 secrets to GitHub
+
+The setup script's output included a URL like:
+`https://github.com/<your-username>/moodle-automation/settings/secrets/actions`
+
+Open that URL in your browser. Click **"New repository secret"** five times,
+once per pair from the script's output:
+
+1. `TAU_USERNAME` — your TAU username
+2. `TAU_ID` — your 9-digit TAU ID
+3. `TAU_PASSWORD` — your TAU password
+4. `GOOGLE_CREDENTIALS_B64` — long base64 string (paste exactly, no quotes)
+5. `GOOGLE_TOKEN_B64` — another long base64 string (paste exactly, no quotes)
+
+After saving each, GitHub redirects back to the secrets list. Confirm all 5
+are listed.
+
+**Verify:** the secrets page (`Settings → Secrets and variables → Actions`)
+shows all 5 names with green checkmarks. (Values are not displayed by GitHub
+once saved — that's normal and intentional.)
+
+### Step 7: Trigger your first sync
+
+Open your fork's "Actions" tab on GitHub:
+`https://github.com/<your-username>/moodle-automation/actions`
+
+You may see a yellow banner "Workflows aren't being run on this fork. Enable
+them first." — click **"I understand my workflows, go ahead and enable them"**
+if it appears.
+
+In the left sidebar, click **"Daily Moodle sync"**. Then click the
+**"Run workflow"** dropdown on the right → leave the branch as `master` →
+click the green **"Run workflow"** button.
+
+Wait ~30 seconds, then refresh. A new run appears at the top of the list. Wait
+for it to finish (about 30-60 seconds).
+
+**Verify:**
+- The run shows a **green checkmark** (success)
+- Click into the run → click "sync" → click "Run sync" to see the log; you
+  should see lines like `[main] starting sync`, `[dedup] N new assignment(s)
+  to push`, `[main] done. created=N completed=0`
+- Open Google Tasks (https://tasks.google.com or in Gmail's side panel) — a
+  list called **"Uni Assignments"** now exists, populated with your upcoming
+  TAU assignments
+
+If anything failed, see Troubleshooting Section 8.
 
 ## Tests
 
