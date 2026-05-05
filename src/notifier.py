@@ -62,10 +62,16 @@ def _notify_github_issue(config: Config, message: str) -> None:
         "X-GitHub-Api-Version": "2022-11-28",
     }
     title = message.split("\n")[0]
+    # Assign the issue to the repo owner so GitHub sends a notification.
+    # Activity by github-actions[bot] is otherwise suppressed for watchers.
+    payload = {"title": title, "body": message}
+    owner = os.environ.get("GITHUB_REPOSITORY_OWNER")
+    if owner:
+        payload["assignees"] = [owner]
     create_resp = requests.post(
         f"https://api.github.com/repos/{repo}/issues",
         headers=headers,
-        json={"title": title, "body": message},
+        json=payload,
         timeout=10,
     )
     create_resp.raise_for_status()
