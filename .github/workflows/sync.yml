@@ -10,6 +10,9 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     timeout-minutes: 5
     steps:
       - name: Checkout repo
@@ -40,4 +43,9 @@ jobs:
           TAU_PASSWORD: ${{ secrets.TAU_PASSWORD }}
           GOOGLE_CREDENTIALS_PATH: credentials.json
           GOOGLE_TOKEN_PATH: token.json
+          NOTIFY_GITHUB_ISSUES: ${{ vars.NOTIFY_GITHUB_ISSUES }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python -m src.main
