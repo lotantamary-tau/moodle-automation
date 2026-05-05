@@ -18,6 +18,9 @@ TOKEN_PATH = ROOT / "token.json"
 
 
 def main() -> None:
+    # Force UTF-8 stdout so Windows cp1252 terminals don't crash on box-drawing
+    # characters and check marks in the script's output.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     _banner()
     _check_project_root()
     _check_credentials_file()
@@ -116,8 +119,50 @@ def _build_secret_payloads(username: str, id_: str, password: str) -> dict[str, 
     }
 
 
+def _detect_repo_url() -> str:
+    """Detect the GitHub repo URL from `git remote get-url origin`. Falls back
+    to a placeholder if git or remote is missing."""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            capture_output=True, text=True, check=True, cwd=str(ROOT),
+        )
+        url = result.stdout.strip()
+        # Normalize SSH form (git@github.com:user/repo.git) to HTTPS
+        if url.startswith("git@github.com:"):
+            url = "https://github.com/" + url[len("git@github.com:"):]
+        if url.endswith(".git"):
+            url = url[:-4]
+        return url
+    except Exception:
+        return "https://github.com/<your-username>/moodle-automation"
+
+
 def _print_paste_block(secrets: dict[str, str]) -> None:
-    raise NotImplementedError
+    repo_url = _detect_repo_url()
+    sep = "─" * 68
+    print()
+    print("╔" + "═" * 66 + "╗")
+    print("║  Done. Now add these 5 secrets to GitHub." + " " * 24 + "║")
+    print("╚" + "═" * 66 + "╝")
+    print()
+    print("Open this URL in your browser:")
+    print(f"    {repo_url}/settings/secrets/actions")
+    print()
+    print('Click "New repository secret" five times — once per pair below.')
+    print("Copy the NAME and VALUE exactly. Don't add quotes around the value.")
+    print()
+    items = list(secrets.items())
+    for i, (name, value) in enumerate(items, 1):
+        print(sep)
+        print(f"Secret {i} of {len(items)}")
+        print(f"NAME:   {name}")
+        print(f"VALUE:  {value}")
+    print(sep)
+    print()
+    print('After adding all 5, go to the "Actions" tab → "Daily Moodle sync" →')
+    print('"Run workflow" to trigger your first sync.')
 
 
 if __name__ == "__main__":
