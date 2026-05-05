@@ -52,7 +52,35 @@ def _check_credentials_file() -> None:
 
 
 def _run_oauth_flow() -> None:
-    raise NotImplementedError
+    """Run the Google OAuth flow. Reuses existing token.json if valid; otherwise
+    opens the browser for sign-in and writes a fresh token.json."""
+    if TOKEN_PATH.exists():
+        try:
+            from google.oauth2.credentials import Credentials
+            creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
+            if creds.valid:
+                print("✓ Reusing valid token.json (no browser needed)")
+                return
+            if creds.expired and creds.refresh_token:
+                from google.auth.transport.requests import Request
+                creds.refresh(Request())
+                TOKEN_PATH.write_text(creds.to_json())
+                print("✓ Refreshed existing token.json")
+                return
+        except Exception:
+            pass  # fall through to fresh OAuth flow
+
+    print("Opening browser for Google OAuth...")
+    print("Sign in with your TAU account when prompted.")
+    flow = InstalledAppFlow.from_client_secrets_file(str(CREDS_PATH), SCOPES)
+    try:
+        creds = flow.run_local_server(port=0)
+    except Exception as e:
+        print(f"ERROR: OAuth was canceled or failed: {e}")
+        print("Re-run the script when ready.")
+        sys.exit(1)
+    TOKEN_PATH.write_text(creds.to_json())
+    print("✓ Saved token.json")
 
 
 def _prompt_tau_credentials() -> tuple[str, str, str]:
