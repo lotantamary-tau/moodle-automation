@@ -29,6 +29,16 @@ def _format_message(created_titles: list[str], completed_titles: list[str]) -> s
         parts.append("")
         parts.append(f"משימות שבוצעו({len(completed_titles)}):")
         parts.extend(f"- {t}" for t in completed_titles)
+    if created_titles and completed_titles:
+        footer = "המשימות החדשות נוספו ל-Google Tasks, והמשימות שבוצעו סומנו כהושלמו."
+    elif created_titles:
+        footer = "המשימות החדשות נוספו ל-Google Tasks."
+    elif completed_titles:
+        footer = "המשימות שבוצעו סומנו כהושלמו ב-Google Tasks."
+    else:
+        return "\n".join(parts)
+    parts.append("")
+    parts.append(footer)
     return "\n".join(parts)
 
 
