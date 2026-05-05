@@ -35,11 +35,20 @@ def _banner() -> None:
 
 
 def _check_project_root() -> None:
-    raise NotImplementedError
+    main_py = ROOT / "src" / "main.py"
+    if not main_py.exists():
+        print("ERROR: src/main.py not found.")
+        print("Run this from the moodle-automation/ directory:")
+        print("  python scripts/setup.py")
+        sys.exit(1)
 
 
 def _check_credentials_file() -> None:
-    raise NotImplementedError
+    if not CREDS_PATH.exists():
+        print("ERROR: credentials.json not found in the project root.")
+        print("Place your downloaded credentials.json there, then re-run.")
+        print(f"Expected path: {CREDS_PATH}")
+        sys.exit(1)
 
 
 def _run_oauth_flow() -> None:
