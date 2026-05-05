@@ -6,10 +6,10 @@ dates. Built so it can be forked by other TAU students who run their own
 isolated instance with their own credentials. Exists because manually checking
 each course every week is tedious and assignments get missed.
 
-**Status:** v1.5 complete. The sync runs unattended every day at 05:00 UTC via
-GitHub Actions. Friend onboarding (a future Phase 2) and umbrella restructure
-(a future Phase 3) are deferred until needed. v2 may add notifications
-(Telegram or GitHub Issues) when new tasks are detected.
+**Status:** v2 complete. The sync runs unattended every day at 04:37 UTC via
+GitHub Actions and notifies the user via any configured channels (GitHub
+Issues, ntfy.sh, Telegram, Discord). Friend onboarding (a future Phase 2)
+and umbrella restructure (a future Phase 3) are deferred until needed.
 
 ## Tech Stack & Environment
 
@@ -74,6 +74,10 @@ env vars.
 - [src/dedup.py](src/dedup.py) — pure functions `find_new` and
   `find_completed`. The only tested module.
 - [tests/test_dedup.py](tests/test_dedup.py) — 10 unit tests.
+- [src/notifier.py](src/notifier.py) — optional notifications across 4
+  channels (GitHub Issues, ntfy.sh, Telegram, Discord); each opt-in via secret
+- [tests/test_notifier.py](tests/test_notifier.py) — 2 unit tests for the
+  message formatter
 - [.github/workflows/sync.yml](.github/workflows/sync.yml) — daily cron at 05:00 UTC; runs `python -m src.main` with secrets injected as env vars
 
 ## Conventions & Anti-patterns
