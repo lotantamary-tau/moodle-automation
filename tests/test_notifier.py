@@ -10,12 +10,12 @@ def test_format_message_mixed_new_and_completed():
     expected = (
         "Moodle Tasks Sync:\n"
         "\n"
-        "new assignments(2):\n"
-        "אלגוריתמים: שאלות הבנה – שבוע 4\n"
-        "Software Project: HW 1\n"
+        "משימות חדשות(2):\n"
+        "- אלגוריתמים: שאלות הבנה – שבוע 4\n"
+        "- Software Project: HW 1\n"
         "\n"
-        "completed assignments(1):\n"
-        "נוירוביולוגיה: תרגיל 3"
+        "משימות שבוצעו(1):\n"
+        "- נוירוביולוגיה: תרגיל 3"
     )
     assert result == expected
 
@@ -29,9 +29,9 @@ def test_format_message_only_new_omits_completed_section():
     expected = (
         "Moodle Tasks Sync:\n"
         "\n"
-        "new assignments(1):\n"
-        "Software Project: HW 1"
+        "משימות חדשות(1):\n"
+        "- Software Project: HW 1"
     )
     assert result == expected
-    # Sanity: 'completed' must not appear at all
-    assert "completed" not in result
+    # Sanity: the 'completed' section's Hebrew label must not appear at all
+    assert "שבוצעו" not in result

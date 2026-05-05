@@ -23,12 +23,12 @@ def _format_message(created_titles: list[str], completed_titles: list[str]) -> s
     parts = ["Moodle Tasks Sync:"]
     if created_titles:
         parts.append("")
-        parts.append(f"new assignments({len(created_titles)}):")
-        parts.extend(created_titles)
+        parts.append(f"משימות חדשות({len(created_titles)}):")
+        parts.extend(f"- {t}" for t in created_titles)
     if completed_titles:
         parts.append("")
-        parts.append(f"completed assignments({len(completed_titles)}):")
-        parts.extend(completed_titles)
+        parts.append(f"משימות שבוצעו({len(completed_titles)}):")
+        parts.extend(f"- {t}" for t in completed_titles)
     return "\n".join(parts)
 
 
