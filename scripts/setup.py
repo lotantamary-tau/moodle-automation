@@ -84,11 +84,36 @@ def _run_oauth_flow() -> None:
 
 
 def _prompt_tau_credentials() -> tuple[str, str, str]:
-    raise NotImplementedError
+    print()
+    print("Enter your TAU credentials (used to sign in to Moodle):")
+    while True:
+        username = input("  TAU username (e.g., lotantamary): ").strip()
+        if username:
+            break
+        print("  (cannot be empty)")
+    while True:
+        tau_id = input("  TAU ID (9 digits): ").strip()
+        if tau_id:
+            break
+        print("  (cannot be empty)")
+    while True:
+        password = getpass.getpass("  TAU password (input hidden): ").strip()
+        if password:
+            break
+        print("  (cannot be empty)")
+    return username, tau_id, password
 
 
 def _build_secret_payloads(username: str, id_: str, password: str) -> dict[str, str]:
-    raise NotImplementedError
+    creds_b64 = base64.b64encode(CREDS_PATH.read_bytes()).decode("ascii")
+    token_b64 = base64.b64encode(TOKEN_PATH.read_bytes()).decode("ascii")
+    return {
+        "TAU_USERNAME": username,
+        "TAU_ID": id_,
+        "TAU_PASSWORD": password,
+        "GOOGLE_CREDENTIALS_B64": creds_b64,
+        "GOOGLE_TOKEN_B64": token_b64,
+    }
 
 
 def _print_paste_block(secrets: dict[str, str]) -> None:
