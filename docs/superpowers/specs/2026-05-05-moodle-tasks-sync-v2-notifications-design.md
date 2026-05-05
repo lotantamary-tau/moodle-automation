@@ -1,7 +1,7 @@
 # Moodle → Google Tasks Sync — v2 Notifications Design
 
 **Date:** 2026-05-05
-**Status:** Approved, ready for implementation planning
+**Status:** Implemented and verified. ntfy and GitHub Issues channels live-tested; user runs ntfy as primary channel.
 **Predecessors:** [v1.5 design spec](2026-05-04-moodle-tasks-sync-v1.5-design.md), [v1 design spec](2026-05-03-moodle-tasks-sync-v1-design.md), [PRD.md](../../../PRD.md), [DECISIONS.md](../../../DECISIONS.md), [CLAUDE.md](../../../CLAUDE.md)
 
 ---
