@@ -44,6 +44,7 @@ jobs:
           GOOGLE_CREDENTIALS_PATH: credentials.json
           GOOGLE_TOKEN_PATH: token.json
           NOTIFY_GITHUB_ISSUES: ${{ vars.NOTIFY_GITHUB_ISSUES }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
