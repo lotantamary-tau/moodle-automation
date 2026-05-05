@@ -82,9 +82,13 @@ def _notify_github_issue(config: Config, message: str) -> None:
 def _notify_ntfy(config: Config, message: str) -> None:
     if not config.ntfy_topic:
         return
+    # Phones strip leading whitespace from notification bodies, so we use ntfy's
+    # Title header for the headline (renders as a bold row above the body)
+    headline, _, body = message.partition("\n")
     requests.post(
         f"https://ntfy.sh/{config.ntfy_topic}",
-        data=message.encode("utf-8"),
+        data=body.lstrip("\n").encode("utf-8"),
+        headers={"Title": headline.rstrip(":")},
         timeout=10,
     ).raise_for_status()
     print(f"[notifier] ntfy: posted to topic")
