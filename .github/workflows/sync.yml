@@ -2,9 +2,11 @@ name: Daily Moodle sync
 
 on:
   schedule:
-    # Daily at 04:37 UTC (= 06:37 IST winter / 07:37 IDT summer)
-    # The :37 minute avoids load spikes at the top/half of the hour.
-    - cron: "37 4 * * *"
+    # Daily at 02:23 UTC (= 04:23 IST winter / 05:23 IDT summer).
+    # Earlier than 04:37 to absorb GitHub Actions cron delays (1-4h is typical
+    # under load) and still land before the user's morning. The :23 minute
+    # avoids load spikes at the top/half of the hour.
+    - cron: "23 2 * * *"
   workflow_dispatch:
 
 jobs:
